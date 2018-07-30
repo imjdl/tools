@@ -80,9 +80,6 @@ def getfile(base_url, f, domain_path):
     except UnicodeDecodeError:
         print(f['name'], 'create error')
 
-
-
-
 if __name__ == '__main__':
 
     url = 'http://172.28.100.85/.git'
