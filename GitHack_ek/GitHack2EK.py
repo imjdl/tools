@@ -9,17 +9,17 @@ import zlib
 import re
 from threading import Thread
 import argparse
+
 from gitindex.parser import parse
 
-file_path = os.path.dirname(os.path.abspath(__file__))
-file_name = file_path + '/' + 'index'
-
+FILE_PATH = os.path.dirname(os.path.abspath(__file__))
+HEADER = {"User-Agent": 'Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'}
 
 # 读取index文件
 def getindex(url):
-
+    file_name = FILE_PATH + '/' + 'index'
     url = url + 'index'
-    r = requests.get(url=url)
+    r = requests.get(url=url, headers=HEADER)
     if r.status_code != 200:
         print('ERROR CODE')
         sys.exit(0)
@@ -50,11 +50,12 @@ def getfiles(base_url, files, domain_path):
     for f in files:
         Thread(target=getfile, args=(base_url, f, domain_path)).start()
 
+
 def getfile(base_url, f, domain_path):
     base_url = base_url + 'objects/{0}/{1}'
     try:
         url = base_url.format(f['hash'][:2], f['hash'][2:])
-        r = requests.get(url)
+        r = requests.get(url=url, headers=HEADER)
         res = zlib.decompress(r.content)
         res = res.decode('ascii')
         res = re.sub('blob \d+\00', '', res)
@@ -95,7 +96,7 @@ if __name__ == '__main__':
             url = url + '/'
 
         domain= urlparse(url).netloc
-        domain_path = file_path + '/' + domain
+        domain_path = FILE_PATH + '/' + domain
         if not os.path.exists(domain_path):
             os.mkdir(domain_path)
         files = getindex(url)
