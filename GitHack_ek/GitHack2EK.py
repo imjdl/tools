@@ -8,7 +8,6 @@ from urllib.parse import urlparse
 import zlib
 import re
 from threading import Thread
-from queue import Queue
 
 from gitindex.parser import parse
 
