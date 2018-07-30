@@ -7,6 +7,8 @@ import sys
 from urllib.parse import urlparse
 import zlib
 import re
+from threading import Thread
+from queue import Queue
 
 from gitindex.parser import parse
 
@@ -46,18 +48,17 @@ def getindex(url):
 # 根据 index文件到objects文件夹下下载
 def getfiles(base_url, files, domain_path):
     domain_path = domain_path + '/'
-    base_url = base_url + 'objects/{0}/{1}'
     for f in files:
-        try:
-            url = base_url.format(f['hash'][:2], f['hash'][2:])
-            r = requests.get(url)
-            res = zlib.decompress(r.content)
-            res = res.decode('ascii')
-            res = re.sub('blob \d+\00', '', res)
-        except UnicodeDecodeError:
-            print(f['name'], 'create error')
-            continue
+        Thread(target=getfile, args=(base_url, f, domain_path)).start()
 
+def getfile(base_url, f, domain_path):
+    base_url = base_url + 'objects/{0}/{1}'
+    try:
+        url = base_url.format(f['hash'][:2], f['hash'][2:])
+        r = requests.get(url)
+        res = zlib.decompress(r.content)
+        res = res.decode('ascii')
+        res = re.sub('blob \d+\00', '', res)
         if '/' in f['name']:
             file_dir = ''
             dirname = f['name'].split('/')
@@ -73,9 +74,14 @@ def getfiles(base_url, files, domain_path):
             except FileExistsError:
                 with open(domain_path + file_dir + name, 'w') as sc:
                     sc.write(res)
-        print(domain_path + f['name'])
-        with open(domain_path + f['name'], 'w') as sc:
-            sc.write(res)
+        else:
+            print(domain_path + f['name'])
+            with open(domain_path + f['name'], 'w') as sc:
+                sc.write(res)
+    except UnicodeDecodeError:
+        print(f['name'], 'create error')
+
+
 
 
 if __name__ == '__main__':
