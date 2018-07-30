@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import zlib
 import re
 from threading import Thread
-
+import argparse
 from gitindex.parser import parse
 
 file_path = os.path.dirname(os.path.abspath(__file__))
@@ -80,16 +80,23 @@ def getfile(base_url, f, domain_path):
     except UnicodeDecodeError:
         print(f['name'], 'create error')
 
+
 if __name__ == '__main__':
+    par = argparse.ArgumentParser()
+    par.add_argument('-u', help='输入URL')
+    args = par.parse_args()
+    if args.u == None:
+        par.print_help()
+        sys.exit(-1)
+    else:
+        # url = 'http://172.28.100.85/.git'
+        url = args.u
+        if url[-1] != '/':
+            url = url + '/'
 
-    url = 'http://172.28.100.85/.git'
-    if url[-1] != '/':
-        url = url + '/'
-
-    domain= urlparse(url).netloc
-    domain_path = file_path + '/' + domain
-    if not os.path.exists(domain_path):
-        os.mkdir(domain_path)
-    files = getindex(url)
-    print(files)
-    getfiles(url, files, domain_path)
+        domain= urlparse(url).netloc
+        domain_path = file_path + '/' + domain
+        if not os.path.exists(domain_path):
+            os.mkdir(domain_path)
+        files = getindex(url)
+        getfiles(url, files, domain_path)
